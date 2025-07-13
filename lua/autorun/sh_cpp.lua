@@ -64,23 +64,23 @@ if SERVER then
 		return CPP.CanTouch(ply, self)
 	end
 
-	function ENTITY:CPPICanProperty()
+	function ENTITY:CPPICanProperty(ply, property)
 		return CPP.CanTouch(ply, self)
 	end
 
-	function ENTITY:CPPICanUse(ply)
+	function ENTITY:CPPICanUse()
 		return true
 	end
 
-	function ENTITY:CPPICanDamage(ply)
+	function ENTITY:CPPICanDamage()
 		return true
 	end
 
-	function ENTITY:CPPICanPickup(ply)
+	function ENTITY:CPPICanPickup()
 		return true
 	end
 
-	function ENTITY:CPPICanPunt(ply)
+	function ENTITY:CPPICanPunt()
 		return true
 	end
 
