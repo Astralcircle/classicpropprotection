@@ -57,15 +57,15 @@ end
 
 if SERVER then
 	function ENTITY:CPPICanTool(ply, toolmode)
-		return CPP.CanTouch(ply, ent)
+		return CPP.CanTouch(ply, self)
 	end
 
 	function ENTITY:CPPICanPhysgun(ply)
-		return CPP.CanTouch(ply, ent)
+		return CPP.CanTouch(ply, self)
 	end
 
 	function ENTITY:CPPICanProperty()
-		return CPP.CanTouch(ply, ent)
+		return CPP.CanTouch(ply, self)
 	end
 
 	function ENTITY:CPPICanUse(ply)
