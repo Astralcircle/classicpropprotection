@@ -21,7 +21,7 @@ local color_red = Color(255, 0, 0)
 
 hook.Add("HUDPaint", "CPPInfoBox", function()
 	local ent = LocalPlayer():GetEyeTrace().Entity
-	if not ent:IsValid() then return end
+	if not ent:IsValid() or ent:IsPlayer() then return end
 
 	local owner = CPP.GetOwner(ent)
 	draw.WordBox(4, 0, ScrH() / 2, IsValid(owner) and owner:Nick() or "world", "Default", color_background, CPP.CanTouch(LocalPlayer(), ent) and color_green or color_red)
