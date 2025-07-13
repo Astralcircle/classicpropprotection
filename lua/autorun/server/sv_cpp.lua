@@ -14,6 +14,66 @@ function ENTITY:SetCreator(ply)
 	setCreator(self, ply)
 end
 
+local cleanupAdd = cleanup.Add
+
+function cleanup.Add(ply, type, ent)
+	if not IsValid(ply) or not IsValid(ent) then return cleanupAdd(ply, type, ent) end
+
+	ent:CPPISetOwner(ply)
+
+	if type ~= "constraints" and type ~= "AdvDupe2" and not (AdvDupe2 and AdvDupe2.SpawningEntity) then
+		if (ply.CPPBurstSpam or CurTime()) > CurTime() then
+			local burstcount = (ply.CPPBurstCount or 0) + 1
+			ply.CPPBurstCount = burstcount
+
+			if burstcount >= 6 then
+				CPP.Ghost(ent, ent:GetPhysicsObject())
+			end
+		else
+			ply.CPPBurstCount = nil
+		end
+
+		ply.CPPBurstSpam = CurTime() + 0.5
+	end
+
+	cleanupAdd(ply, type, ent)
+end
+
+function CPP.Ghost(ent, phys)
+	if ent.CPPGhosted then return end
+	ent.CPPGhosted = true
+	ent:SetRenderMode(RENDERMODE_TRANSCOLOR)
+	ent:DrawShadow(false)
+
+	ent.CPPOldColor = ent:GetColor()
+	ent:SetColor(Color(ent.CPPOldColor.r, ent.CPPOldColor.g, ent.CPPOldColor.b, ent.CPPOldColor.a - 155))
+	ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
+
+	ent.CPPShouldUnfreeze = phys:IsMoveable()
+	phys:EnableMotion(false)
+end
+
+hook.Add("OnPhysgunPickup", "CPPUnGhost", function(ply, ent)
+	if not ent.CPPGhosted then return end
+	ent.CPPGhosted = nil
+	ent:DrawShadow(true)
+
+	if ent.CPPOldColor then
+		ent:SetColor(Color(ent.CPPOldColor.r, ent.CPPOldColor.g, ent.CPPOldColor.b, ent.CPPOldColor.a))
+		ent.CPPOldColor = nil
+	end
+
+	ent:SetCollisionGroup(COLLISION_GROUP_NONE)
+
+	if ent.CPPShouldUnfreeze then
+		local phys = ent:GetPhysicsObject()
+
+		if phys:IsValid() then
+			phys:EnableMotion(true)
+		end
+	end
+end)
+
 hook.Add("PostGamemodeLoaded", "CPPOverrideFunctions", function()
 	local PLAYER = FindMetaTable("Player")
 	local addCount = PLAYER.AddCount
