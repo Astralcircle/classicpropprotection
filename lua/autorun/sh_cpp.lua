@@ -7,7 +7,7 @@ function ENTITY:CPPIGetOwner()
 end
 
 function CPP.CanTouch(ply, ent)
-	if ply:IsAdmin() then return true end
+	if ply:IsAdmin() or hook.Run("CPPCanTouch", ply, ent) then return true end
 	local owner = CPP.GetOwner(ent)
 
 	if IsValid(owner) then

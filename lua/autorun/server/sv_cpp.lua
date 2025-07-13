@@ -175,9 +175,7 @@ end)
 util.AddNetworkString("cpp_notify")
 
 concommand.Add("CPP_Cleanup", function(ply, cmd, args, argstr)
-	if not ply:IsAdmin() then return end
-
-	local target_owner
+	if not ply:IsAdmin() and not hook.Run("CPPCanCleanup", ply) then return end
 
 	if args[1] == "disconnected" then
 		for _, v in ents.Iterator() do
