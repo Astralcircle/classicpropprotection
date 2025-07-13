@@ -41,7 +41,7 @@ local function OpenToolPanel(panel)
 
 		local steamid = v:SteamID()
 		local checkbox = toolpanel:CheckBox(string.format("%s(%s)", v:Nick(), steamid))
-		checkbox:SetChecked(LocalPlayer().CPPBuddies and LocalPlayer().CPPBuddies[v] == true)
+		checkbox:SetChecked(LocalPlayer().CPPFriends and LocalPlayer().CPPFriends[v] == true)
 
 		function checkbox:OnChange(value)
 			net.Start("cpp_friends")
