@@ -49,7 +49,7 @@ function PLAYER:CPPIGetFriends()
 	local tab = {}
 
 	for k, v in pairs(friends) do
-		tab[k] = v
+		table.insert(tab, k)
 	end
 
 	return tab
