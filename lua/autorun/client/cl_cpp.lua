@@ -68,8 +68,8 @@ net.Receive("cpp_friends", function()
 	local ply = net.ReadPlayer()
 	if not ply:IsValid() then return end
 
-	ply.CPPBuddies = ply.CPPBuddies or {}
-	ply.CPPBuddies[net.ReadPlayer()] = net.ReadBool() or nil
+	ply.CPPFriends = ply.CPPFriends or {}
+	ply.CPPFriends[net.ReadPlayer()] = net.ReadBool() or nil
 end)
 
 hook.Add("SpawnMenuOpened", "CPPToolMenu", OpenToolPanel)

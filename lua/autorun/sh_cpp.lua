@@ -40,6 +40,21 @@ function CPPI:GetInterfaceVersion()
 	return 1.3
 end
 
+local PLAYER = FindMetaTable("Player")
+
+function PLAYER:CPPIGetFriends()
+	local friends = self.CPPFriends
+	if not friends then return {} end
+
+	local tab = {}
+
+	for k, v in pairs(friends) do
+		tab[k] = v
+	end
+
+	return tab
+end
+
 if SERVER then
 	function ENTITY:CPPICanTool(ply, toolmode)
 		return CPP.CanTouch(ply, ent)

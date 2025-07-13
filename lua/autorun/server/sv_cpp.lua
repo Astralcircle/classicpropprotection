@@ -68,13 +68,13 @@ hook.Add("PlayerSpawnedVehicle", "CPPAssignOwnership", function(ply, ent) ent:CP
 util.AddNetworkString("cpp_friends")
 
 net.Receive("cpp_friends", function(len, ply)
-	ply.CPPBuddies = ply.CPPBuddies or {}
+	ply.CPPFriends = ply.CPPFriends or {}
 
 	local target_ply = player.GetBySteamID(net.ReadString())
 	if not target_ply or target_ply == ply then return end
 
 	local value = net.ReadBool()
-	ply.CPPBuddies[target_ply] = value or nil
+	ply.CPPFriends[target_ply] = value or nil
 
 	net.Start("cpp_friends")
 	net.WritePlayer(ply)
