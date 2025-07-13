@@ -7,8 +7,15 @@ function ENTITY:CPPIGetOwner()
 end
 
 function CPP.CanTouch(ply, ent)
-	--if ply:IsAdmin() then return true end
-	return CPP.GetOwner(ent) == ply
+	if ply:IsAdmin() then return true end
+	local owner = CPP.GetOwner(ent)
+
+	if IsValid(owner) then
+		local buddies = owner.CPPBuddies or {}
+		if buddies[ply] then return true end
+	end
+
+	return owner == ply
 end
 
 hook.Add("CanEditVariable", "CPPCheckPermission", function(ent, ply, key, val, editor)if not CPP.CanTouch(ply, ent) then return false end end)

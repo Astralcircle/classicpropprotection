@@ -65,6 +65,23 @@ hook.Add("PlayerSpawnedSENT", "CPPAssignOwnership", function(ply, ent) ent:CPPIS
 hook.Add("PlayerSpawnedSWEP", "CPPAssignOwnership", function(ply, ent) ent:CPPISetOwner(ply) end)
 hook.Add("PlayerSpawnedVehicle", "CPPAssignOwnership", function(ply, ent) ent:CPPISetOwner(ply) end)
 
+util.AddNetworkString("cpp_friends")
+
+net.Receive("cpp_friends", function(len, ply)
+	ply.CPPBuddies = ply.CPPBuddies or {}
+
+	local target_ply = player.GetBySteamID(net.ReadString())
+	if not target_ply or target_ply == ply then return end
+
+	local value = net.ReadBool()
+	ply.CPPBuddies[target_ply] = value or nil
+
+	net.Start("cpp_friends")
+	net.WritePlayer(ply)
+	net.WritePlayer(target_ply)
+	net.Broadcast()
+end)
+
 local load_queue = {}
 
 hook.Add("PlayerInitialSpawn", "CPPInitializePlayer", function(ply)
@@ -84,7 +101,7 @@ hook.Add("StartCommand", "CPPInitializePlayer", function( ply, cmd )
 		net.Start("cpp_sendowners")
 
 		for _, v in ents.Iterator() do
-			if CPP.GetOwner(v) ~= nil and v:GetSolid() ~= SOLID_NONE and not v:IsEFlagSet(EFL_SERVER_ONLY) then
+			if IsValid(CPP.GetOwner(v)) and v:GetSolid() ~= SOLID_NONE and not v:IsEFlagSet(EFL_SERVER_ONLY) then
 				net.WriteBool(true)
 				net.WriteUInt(v:EntIndex(), MAX_EDICT_BITS)
 				net.WriteUInt(IsValid(v.CPPOwner) and v.CPPOwner:EntIndex() or 0, MAX_PLAYER_BITS)
@@ -93,7 +110,48 @@ hook.Add("StartCommand", "CPPInitializePlayer", function( ply, cmd )
 
 		net.Send(ply)
 	end
-end )
+end)
+
+util.AddNetworkString("cpp_notify")
+
+concommand.Add("CPP_Cleanup", function(ply, cmd, args, argstr)
+	if not ply:IsAdmin() then return end
+
+	local target_owner
+
+	if args[1] == "disconnected" then
+		for _, v in ents.Iterator() do
+			local owner = CPP.GetOwner(v)
+
+			if owner ~= nil and not owner:IsValid() then
+				v:Remove()
+			end
+		end
+
+		net.Start("cpp_notify")
+		net.WriteString(ply:Nick())
+		net.WriteString("disconnected")
+		net.Broadcast()
+	else
+		local target_owner = player.GetBySteamID(args[1])
+		if not target_owner then return end
+
+		for _, v in ents.Iterator() do
+			if v:IsWeapon() and v:GetOwner():IsValid() then
+				continue
+			end
+
+			if CPP.GetOwner(v) == target_owner then
+				v:Remove()
+			end
+		end
+
+		net.Start("cpp_notify")
+		net.WriteString(ply:Nick())
+		net.WriteString(target_owner:Nick())
+		net.Broadcast()
+	end
+end)
 
 timer.Create("CPP_AutoCleanup", 300, 1, function()
 	for _, v in ents.Iterator() do
