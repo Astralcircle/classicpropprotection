@@ -19,7 +19,6 @@ hook.Add("PostGamemodeLoaded", "CPPOverrideFunctions", function()
 	local addCount = PLAYER.AddCount
 
 	function PLAYER:AddCount(str, ent)
-		print(ent, self)
 		ent:CPPISetOwner(self)
 		addCount(self, str, ent)
 	end
@@ -45,7 +44,9 @@ function ENTITY:CPPISetOwner(ply)
 				if v:IsValid() and v:GetSolid() ~= SOLID_NONE and not v:IsEFlagSet(EFL_SERVER_ONLY) then
 					net.WriteBool(true)
 					net.WriteUInt(v:EntIndex(), MAX_EDICT_BITS)
-					net.WriteUInt(IsValid(v.CPPOwner) and v.CPPOwner:EntIndex() or 0, MAX_PLAYER_BITS)
+
+					local owner = CPP.GetOwner(v)
+					net.WriteUInt(IsValid(owner) and owner:EntIndex() or 0, MAX_PLAYER_BITS)
 				end
 			end
 
@@ -83,7 +84,7 @@ hook.Add("StartCommand", "CPPInitializePlayer", function( ply, cmd )
 		net.Start("cpp_sendowners")
 
 		for _, v in ents.Iterator() do
-			if v:GetSolid() ~= SOLID_NONE and not v:IsEFlagSet(EFL_SERVER_ONLY) then
+			if CPP.GetOwner(v) ~= nil and v:GetSolid() ~= SOLID_NONE and not v:IsEFlagSet(EFL_SERVER_ONLY) then
 				net.WriteBool(true)
 				net.WriteUInt(v:EntIndex(), MAX_EDICT_BITS)
 				net.WriteUInt(IsValid(v.CPPOwner) and v.CPPOwner:EntIndex() or 0, MAX_PLAYER_BITS)
@@ -96,7 +97,7 @@ end )
 
 timer.Create("CPP_AutoCleanup", 300, 1, function()
 	for _, v in ents.Iterator() do
-		local owner = v:CPPIGetOwner()
+		local owner = CPP.GetOwner(v)
 
 		if owner ~= nil and not owner:IsValid() then
 			v:Remove()

@@ -14,3 +14,15 @@ function CPP.GetOwner(ent)
 	local index = CPP.entOwners[ent:EntIndex()]
 	return index and Entity(index)
 end
+
+local color_background = Color(0, 0, 0, 110)
+local color_green = Color(0, 255, 0)
+local color_red = Color(255, 0, 0)
+
+hook.Add("HUDPaint", "CPPInfoBox", function()
+	local ent = LocalPlayer():GetEyeTrace().Entity
+	if not ent:IsValid() then return end
+
+	local owner = CPP.GetOwner(ent)
+	draw.WordBox(4, 0, ScrH() / 2, IsValid(owner) and owner:Nick() or "world", "Default", color_background, CPP.CanTouch(LocalPlayer(), ent) and color_green or color_red)
+end)
