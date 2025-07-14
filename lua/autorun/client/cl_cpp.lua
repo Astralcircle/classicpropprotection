@@ -52,8 +52,8 @@ end)
 local toolpanel
 
 local function OpenToolPanel(panel)
-	if not toolpanel then toolpanel = panel end
-	if not toolpanel then return end
+	if not IsValid(toolpanel) then toolpanel = panel end
+	if not IsValid(toolpanel) then return end
 
 	toolpanel:Clear()
 	toolpanel:Help("Select friends:")
