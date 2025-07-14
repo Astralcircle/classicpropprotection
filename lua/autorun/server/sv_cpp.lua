@@ -62,11 +62,13 @@ hook.Add("StartCommand", "CPPInitializePlayer", function( ply, cmd )
 		net.Start("cpp_sendowners")
 
 		for _, v in ents.Iterator() do
-			net.WriteBool(true)
-			net.WriteUInt(v:EntIndex(), MAX_EDICT_BITS)
-
 			local owner = CPP.GetOwner(v)
-			net.WriteUInt(IsValid(owner) and owner:EntIndex() or 0, MAX_PLAYER_BITS)
+
+			if IsValid(owner) then
+				net.WriteBool(true)
+				net.WriteUInt(v:EntIndex(), MAX_EDICT_BITS)
+				net.WriteUInt(owner:EntIndex(), MAX_PLAYER_BITS)
+			end
 		end
 
 		net.Send(ply)
