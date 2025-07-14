@@ -14,11 +14,11 @@ local network_entities = {}
 local MAX_PLAYER_BITS = math.ceil(math.log(1 + game.MaxPlayers()) / math.log(2))
 
 function CPP.SetOwner(ent, ply)
-	if CPP.GetOwner(self) == ply then return end
+	if CPP.GetOwner(ent) == ply then return end
 
-	self.CPPOwner = ply
-	self.CPPOwnerID = IsValid(ply) and ply:SteamID()
-	table.insert(network_entities, self)
+	ent.CPPOwner = ply
+	ent.CPPOwnerID = IsValid(ply) and ply:SteamID()
+	table.insert(network_entities, ent)
 
 	if not timer.Exists("CPP_SendOwners") then
 		timer.Create("CPP_SendOwners", 0, 1, function()
