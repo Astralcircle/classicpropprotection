@@ -169,7 +169,7 @@ end)
 hook.Add("PlayerDisconnected", "CPP_AutoCleanup", function(ply)
 	local steamid = ply:SteamID()
 
-	timer.Simple(300, function()
+	timer.Create("CPP_AutoCleanup_" .. steamid, 300, 1, function()
 		if player.GetBySteamID(steamid) then return end
 
 		for _, v in ents.Iterator() do
