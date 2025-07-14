@@ -59,7 +59,7 @@ end
 
 if SERVER then
 	function ENTITY:CPPISetOwner(ply)
-		CPP.SetOwner(ent, ply)
+		CPP.SetOwner(self, ply)
 	end
 
 	function ENTITY:CPPICanTool(ply, toolmode)
