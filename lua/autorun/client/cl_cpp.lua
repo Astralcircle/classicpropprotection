@@ -1,6 +1,11 @@
 CPP = CPP or {}
 CPP.entOwners = {}
 
+function CPP.GetOwner(ent)
+	local index = CPP.entOwners[ent:EntIndex()]
+	return index and Entity(index)
+end
+
 local MAX_PLAYER_BITS = math.ceil(math.log(1 + game.MaxPlayers()) / math.log(2))
 
 net.Receive("cpp_sendowners", function()
@@ -10,15 +15,24 @@ net.Receive("cpp_sendowners", function()
 	end
 end)
 
-function CPP.GetOwner(ent)
-	local index = CPP.entOwners[ent:EntIndex()]
-	return index and Entity(index)
-end
+net.Receive("cpp_notify", function()
+	notification.AddLegacy(net.ReadString() .. " cleaned up " .. net.ReadString() .. " props", NOTIFY_CLEANUP, 2)
+	surface.PlaySound("buttons/button15.wav")
+end)
+
+net.Receive("cpp_friends", function()
+	local ply = net.ReadPlayer()
+	if not ply:IsValid() then return end
+
+	ply.CPPFriends = ply.CPPFriends or {}
+	ply.CPPFriends[net.ReadPlayer()] = net.ReadBool() or nil
+end)
 
 local color_background = Color(0, 0, 0, 110)
 local color_green = Color(0, 255, 0)
 local color_red = Color(255, 0, 0)
 
+-- HUD + Spawnmenu
 hook.Add("HUDPaint", "CPPInfoBox", function()
 	local ent = LocalPlayer():GetEyeTrace().Entity
 	if not ent:IsValid() or ent:IsPlayer() then return end
@@ -58,19 +72,6 @@ local function OpenToolPanel(panel)
 		toolpanel:Button("Cleanup " .. v:Nick(), "CPP_Cleanup", v:SteamID())
 	end
 end
-
-net.Receive("cpp_notify", function()
-	notification.AddLegacy(net.ReadString() .. " cleaned up " .. net.ReadString() .. " props", NOTIFY_CLEANUP, 2)
-	surface.PlaySound("buttons/button15.wav")
-end)
-
-net.Receive("cpp_friends", function()
-	local ply = net.ReadPlayer()
-	if not ply:IsValid() then return end
-
-	ply.CPPFriends = ply.CPPFriends or {}
-	ply.CPPFriends[net.ReadPlayer()] = net.ReadBool() or nil
-end)
 
 hook.Add("SpawnMenuOpened", "CPPToolMenu", OpenToolPanel)
 hook.Add("PopulateToolMenu", "CPPToolMenu", function() spawnmenu.AddToolMenuOption("Utilities", "User", "Classic_Prop_Protection", "Prop Protection", "", "", OpenToolPanel) end)

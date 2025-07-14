@@ -1,11 +1,6 @@
 CPP = CPP or {}
 
-local ENTITY = FindMetaTable("Entity")
-
-function ENTITY:CPPIGetOwner()
-	return CPP.GetOwner(self), CPPI.CPPI_NOTIMPLEMENTED
-end
-
+-- Check for touch permission
 function CPP.CanTouch(ply, ent)
 	if ply:IsAdmin() or hook.Run("CPPCanTouch", ply, ent) then return true end
 	local owner = CPP.GetOwner(ent)
@@ -24,6 +19,7 @@ hook.Add("CanProperty", "CPPCheckPermission", function(ply, property, ent)if not
 hook.Add("CanTool", "CPPCheckPermission", function(ply, tr, toolname, tool, button) if tr.Entity:IsValid() and not CPP.CanTouch(ply, tr.Entity) then return false end end)
 hook.Add("PhysgunPickup", "CPPCheckPermission", function(ply, ent)if not CPP.CanTouch(ply, ent) then return false end end)
 
+-- CPPI
 CPPI = CPPI or {}
 CPPI.CPPI_NOTIMPLEMENTED = -1024
 CPPI.CPPI_DEFER = -512
@@ -55,7 +51,17 @@ function PLAYER:CPPIGetFriends()
 	return tab
 end
 
+local ENTITY = FindMetaTable("Entity")
+
+function ENTITY:CPPIGetOwner()
+	return CPP.GetOwner(self), CPPI.CPPI_NOTIMPLEMENTED
+end
+
 if SERVER then
+	function ENTITY:CPPISetOwner(ply)
+		CPP.SetOwner(ent, ply)
+	end
+
 	function ENTITY:CPPICanTool(ply, toolmode)
 		return CPP.CanTouch(ply, self)
 	end
