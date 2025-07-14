@@ -75,7 +75,7 @@ function CPP.ClientMenu(panel)
 
 	local players = player.GetAll()
 	local friends = CPP.Friends[LocalPlayer():SteamID()]
-	table.sort(players, function(a, b) return a:Nick() > b:Nick() end)
+	table.sort(players, function(a, b) return a:Nick() < b:Nick() end)
 
 	if #players > 1 then
 		for _, v in ipairs(players) do
@@ -108,7 +108,7 @@ function CPP.AdminMenu(panel)
 	adminmenu:Button("Cleanup disconnected props", "CPP_Cleanup", "disconnected")
 
 	local players = player.GetAll()
-	table.sort(players, function(a, b) return a:Nick() > b:Nick() end)
+	table.sort(players, function(a, b) return a:Nick() < b:Nick() end)
 
 	for _, v in ipairs(players) do
 		adminmenu:Button("Cleanup " .. v:Nick(), "CPP_Cleanup", v:SteamID())
