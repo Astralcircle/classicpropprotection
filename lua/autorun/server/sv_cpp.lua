@@ -35,6 +35,7 @@ function CPP.SetOwner(ent, ply)
 			end
 
 			network_entities = {}
+			net.WriteBool(false)
 
 			net.Broadcast()
 		end)
@@ -70,6 +71,8 @@ hook.Add("StartCommand", "CPPInitializePlayer", function( ply, cmd )
 				net.WriteUInt(owner:EntIndex(), MAX_PLAYER_BITS)
 			end
 		end
+
+		net.WriteBool(false)
 
 		net.Send(ply)
 	end
