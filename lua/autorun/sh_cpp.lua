@@ -2,7 +2,7 @@ CPP = CPP or {}
 
 -- Check for touch permission
 function CPP.CanTouch(ply, ent)
-	if ply:IsAdmin() or hook.Run("CPPCanTouch", ply, ent) then return true end
+	if ply:GetNW2Bool("CPP_TouchEverything") then return true end
 	local owner = CPP.GetOwner(ent)
 
 	if IsValid(owner) then
@@ -99,3 +99,13 @@ if SERVER then
 		return true
 	end
 end
+
+CAMI.RegisterPrivilege({
+	Name = "CPP_Cleanup",
+    MinAccess = "admin"
+})
+
+CAMI.RegisterPrivilege({
+	Name = "CPP_TouchEverything",
+    MinAccess = "admin"
+})

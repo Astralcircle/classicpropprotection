@@ -142,7 +142,7 @@ util.AddNetworkString("cpp_notify")
 
 -- Cleanup
 concommand.Add("CPP_Cleanup", function(ply, cmd, args, argstr)
-	if not ply:IsAdmin() and not hook.Run("CPPCanCleanup", ply) then return end
+	if not ply.CPPCanCleanup then return end
 
 	if args[1] == "disconnected" then
 		for _, v in ents.Iterator() do
@@ -190,5 +190,24 @@ hook.Add("PlayerDisconnected", "CPP_AutoCleanup", function(ply)
 				v:Remove()
 			end
 		end
+	end)
+end)
+
+-- CAMI rights
+hook.Add("PlayerInitialSpawn", "CPPSetupRights", function(ply)
+	timer.Simple(0, function()
+		if not ply:IsValid() then return end
+
+		CAMI.PlayerHasAccess(ply, "CPP_Cleanup", function(bool)
+			if bool then
+				ply.CPPCanCleanup = true
+			end
+		end)
+
+		CAMI.PlayerHasAccess(ply, "CPP_TouchEverything", function(bool)
+			if bool then
+				ply:SetNW2Bool("CPP_TouchEverything", true)
+			end
+		end)
 	end)
 end)
