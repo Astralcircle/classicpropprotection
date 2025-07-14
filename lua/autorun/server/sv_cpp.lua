@@ -85,7 +85,10 @@ hook.Add("PlayerSpawnedVehicle", "CPPAssignOwnership", function(ply, ent) CPP.Se
 local cleanupAdd = cleanup.Add
 
 function cleanup.Add(ply, type, ent)
-	CPP.SetOwner(ent, ply)
+	if IsValid(ply) and IsValid(ent) then
+		CPP.SetOwner(ent, ply)
+	end
+
 	return cleanupAdd(ply, type, ent)
 end
 
