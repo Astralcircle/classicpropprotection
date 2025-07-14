@@ -25,7 +25,7 @@ function CPP.SetOwner(ent, ply)
 			net.Start("cpp_sendowners")
 
 			for _, v in ipairs(network_entities) do
-				if v:IsValid() and IsValid(CPP.GetOwner(v)) and v:GetSolid() ~= SOLID_NONE and not v:IsEFlagSet(EFL_SERVER_ONLY) then
+				if v:IsValid() then
 					net.WriteBool(true)
 					net.WriteUInt(v:EntIndex(), MAX_EDICT_BITS)
 
@@ -62,11 +62,11 @@ hook.Add("StartCommand", "CPPInitializePlayer", function( ply, cmd )
 		net.Start("cpp_sendowners")
 
 		for _, v in ents.Iterator() do
-			if IsValid(CPP.GetOwner(v)) and v:GetSolid() ~= SOLID_NONE and not v:IsEFlagSet(EFL_SERVER_ONLY) then
-				net.WriteBool(true)
-				net.WriteUInt(v:EntIndex(), MAX_EDICT_BITS)
-				net.WriteUInt(IsValid(v.CPPOwner) and v.CPPOwner:EntIndex() or 0, MAX_PLAYER_BITS)
-			end
+			net.WriteBool(true)
+			net.WriteUInt(v:EntIndex(), MAX_EDICT_BITS)
+
+			local owner = CPP.GetOwner(v)
+			net.WriteUInt(IsValid(owner) and owner:EntIndex() or 0, MAX_PLAYER_BITS)
 		end
 
 		net.Send(ply)
