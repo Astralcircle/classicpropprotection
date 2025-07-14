@@ -110,18 +110,31 @@ end)
 util.AddNetworkString("cpp_friends")
 
 net.Receive("cpp_friends", function(len, ply)
-	ply.CPPFriends = ply.CPPFriends or {}
-
 	local target_ply = player.GetBySteamID(net.ReadString())
 	if not target_ply or target_ply == ply then return end
 
 	local value = net.ReadBool()
+	ply.CPPFriends = ply.CPPFriends or {}
 	ply.CPPFriends[target_ply] = value or nil
 
 	net.Start("cpp_friends")
-	net.WritePlayer(ply)
-	net.WritePlayer(target_ply)
+	net.WriteBool(false)
+	net.WriteString(ply:SteamID())
+	net.WriteString(target_ply:SteamID())
 	net.WriteBool(value)
+	net.Broadcast()
+end)
+
+hook.Add("PlayerDisconnected", "CPPCleanupFriends", function(ply)
+	for _, friend in player.Iterator() do
+		if friend.CPPFriends then
+			friend.CPPFriends[ply] = nil
+		end
+	end
+
+	net.Start("cpp_friends")
+	net.WriteBool(true)
+	net.WriteString(ply:SteamID())
 	net.Broadcast()
 end)
 

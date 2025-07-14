@@ -6,8 +6,13 @@ function CPP.CanTouch(ply, ent)
 	local owner = CPP.GetOwner(ent)
 
 	if IsValid(owner) then
-		local buddies = owner.CPPBuddies or {}
-		if buddies[ply] then return true end
+		if SERVER then
+			local friends = owner.CPPFriends
+			if friends and friends[ply] then return true end
+		else
+			local friends = CPP.Friends[owner:SteamID()]
+			if friends and friends[ply:SteamID()] then return true end
+		end
 	end
 
 	return owner == ply
@@ -36,21 +41,6 @@ function CPPI:GetInterfaceVersion()
 	return 1.3
 end
 
-local PLAYER = FindMetaTable("Player")
-
-function PLAYER:CPPIGetFriends()
-	local friends = self.CPPFriends
-	if not friends then return {} end
-
-	local tab = {}
-
-	for k, v in pairs(friends) do
-		table.insert(tab, k)
-	end
-
-	return tab
-end
-
 local ENTITY = FindMetaTable("Entity")
 
 function ENTITY:CPPIGetOwner()
@@ -58,6 +48,21 @@ function ENTITY:CPPIGetOwner()
 end
 
 if SERVER then
+	local PLAYER = FindMetaTable("Player")
+
+	function PLAYER:CPPIGetFriends()
+		local friends = self.CPPFriends
+		if not friends then return {} end
+
+		local tab = {}
+
+		for k, v in pairs(friends) do
+			table.insert(tab, k)
+		end
+
+		return tab
+	end
+
 	function ENTITY:CPPISetOwner(ply)
 		CPP.SetOwner(self, ply)
 	end

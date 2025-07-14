@@ -1,4 +1,5 @@
 CPP = CPP or {}
+CPP.Friends = {}
 CPP.entOwners = {}
 
 function CPP.GetOwner(ent)
@@ -21,11 +22,18 @@ net.Receive("cpp_notify", function()
 end)
 
 net.Receive("cpp_friends", function()
-	local ply = net.ReadPlayer()
-	if not ply:IsValid() then return end
+	if net.ReadBool() then
+		local steamid = net.ReadString()
+		CPP.Friends[steamid] = nil
 
-	ply.CPPFriends = ply.CPPFriends or {}
-	ply.CPPFriends[net.ReadPlayer()] = net.ReadBool() or nil
+		for _, friends in pairs(CPP.Friends) do
+			friends[steamid] = nil
+		end
+	else
+		local steamid = net.ReadString()
+		CPP.Friends[steamid] = CPP.Friends[steamid] or {}
+		CPP.Friends[steamid][net.ReadString()] = net.ReadBool() or nil
+	end
 end)
 
 local color_background = Color(0, 0, 0, 110)
@@ -55,7 +63,9 @@ local function OpenToolPanel(panel)
 
 		local steamid = v:SteamID()
 		local checkbox = toolpanel:CheckBox(string.format("%s(%s)", v:Nick(), steamid))
-		checkbox:SetChecked(LocalPlayer().CPPFriends and LocalPlayer().CPPFriends[v] == true)
+
+		local friends = CPP.Friends[LocalPlayer():SteamID()]
+		checkbox:SetChecked(friends and friends[steamid] ~= nil)
 
 		function checkbox:OnChange(value)
 			net.Start("cpp_friends")
