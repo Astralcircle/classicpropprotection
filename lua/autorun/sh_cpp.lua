@@ -2,20 +2,29 @@ CPP = CPP or {}
 
 -- Check for touch permission
 function CPP.CanTouch(ply, ent)
-	if ply:GetNW2Bool("CPP_TouchEverything") then return true end
 	local owner = CPP.GetOwner(ent)
 
-	if IsValid(owner) then
-		if SERVER then
-			local friends = owner.CPPFriends
-			if friends and friends[ply] then return true end
-		else
-			local friends = CPP.Friends[owner:SteamID()]
-			if friends and friends[ply:SteamID()] then return true end
+	if owner ~= ply then
+		if not IsValid(owner) then
+			return ply:GetNW2Bool("CPP_TouchEverything") and ply:GetInfoNum("cpp_ignoreworldprops", 1) == 0
 		end
-	end
 
-	return owner == ply
+		if ply:GetInfoNum("cpp_ignoreothersprops", 0) == 0 then
+			if ply:GetNW2Bool("CPP_TouchEverything") then
+				return true
+			end
+
+			if SERVER then
+				local friends = owner.CPPFriends
+				if friends and friends[ply] then return true end
+			else
+				local friends = CPP.Friends[owner:SteamID()]
+				if friends and friends[ply:SteamID()] then return true end
+			end
+		end
+	else
+		return ply:GetInfoNum("cpp_ignoreyourprops", 0) == 0
+	end
 end
 
 hook.Add("CanEditVariable", "CPPCheckPermission", function(ent, ply, key, val, editor)if not CPP.CanTouch(ply, ent) then return false end end)
