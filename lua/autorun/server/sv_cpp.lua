@@ -139,6 +139,7 @@ net.Receive("cpp_friends", function(len, ply)
 	net.Start("cpp_friends")
 	net.WritePlayer(ply)
 	net.WritePlayer(target_ply)
+	net.WriteBool(value)
 	net.Broadcast()
 end)
 
