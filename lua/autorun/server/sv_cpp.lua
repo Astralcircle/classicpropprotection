@@ -41,11 +41,10 @@ function CPP.SetOwner(ent, ply)
 	end
 end
 
--- Send touch data to new players
 local load_queue = {}
 
+-- Restore ownership for rejoined players
 hook.Add("PlayerInitialSpawn", "CPPInitializePlayer", function(ply)
-	-- Restore ownership for rejoined players
 	for _, v in ents.Iterator() do
 		if v.CPPOwnerID == ply:SteamID() then
 			CPP.SetOwner(v, ply)
@@ -55,6 +54,7 @@ hook.Add("PlayerInitialSpawn", "CPPInitializePlayer", function(ply)
 	load_queue[ply] = true
 end)
 
+-- Send touch data to new players
 hook.Add("StartCommand", "CPPInitializePlayer", function( ply, cmd )
 	if load_queue[ply] and not cmd:IsForced() then
 		load_queue[ply] = nil
@@ -82,11 +82,18 @@ hook.Add("PlayerSpawnedSENT", "CPPAssignOwnership", function(ply, ent) CPP.SetOw
 hook.Add("PlayerSpawnedSWEP", "CPPAssignOwnership", function(ply, ent) CPP.SetOwner(ent, ply) end)
 hook.Add("PlayerSpawnedVehicle", "CPPAssignOwnership", function(ply, ent) CPP.SetOwner(ent, ply) end)
 
+local cleanupAdd = cleanup.Add
+
+function cleanup.Add(ply, type, ent)
+	CPP.SetOwner(ent, ply)
+	return cleanupAdd(ply, type, ent)
+end
+
 local setCreator = ENTITY.SetCreator
 
 function ENTITY:SetCreator(ply)
 	CPP.SetOwner(self, ply)
-	setCreator(self, ply)
+	return setCreator(self, ply)
 end
 
 hook.Add("PostGamemodeLoaded", "CPPOverrideFunctions", function()
@@ -95,69 +102,7 @@ hook.Add("PostGamemodeLoaded", "CPPOverrideFunctions", function()
 
 	function PLAYER:AddCount(str, ent)
 		CPP.SetOwner(ent, self)
-		addCount(self, str, ent)
-	end
-end)
-
--- Define ownership + antispam
-local cleanupAdd = cleanup.Add
-
-function cleanup.Add(ply, type, ent)
-	if not IsValid(ply) or not IsValid(ent) then return cleanupAdd(ply, type, ent) end
-
-	CPP.SetOwner(ent, ply)
-
-	if type ~= "constraints" and type ~= "AdvDupe2" and not (AdvDupe2 and AdvDupe2.SpawningEntity) then
-		if (ply.CPPBurstSpam or CurTime()) > CurTime() then
-			local burstcount = (ply.CPPBurstCount or 0) + 1
-			ply.CPPBurstCount = burstcount
-
-			if burstcount >= 6 then
-				CPP.Ghost(ent, ent:GetPhysicsObject())
-			end
-		else
-			ply.CPPBurstCount = nil
-		end
-
-		ply.CPPBurstSpam = CurTime() + 0.5
-	end
-
-	cleanupAdd(ply, type, ent)
-end
-
--- Ghosting
-function CPP.Ghost(ent, phys)
-	if ent.CPPGhosted then return end
-	ent.CPPGhosted = true
-	ent:SetRenderMode(RENDERMODE_TRANSCOLOR)
-	ent:DrawShadow(false)
-
-	ent.CPPOldColor = ent:GetColor()
-	ent:SetColor(Color(ent.CPPOldColor.r, ent.CPPOldColor.g, ent.CPPOldColor.b, ent.CPPOldColor.a - 155))
-	ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
-
-	ent.CPPShouldUnfreeze = phys:IsMoveable()
-	phys:EnableMotion(false)
-end
-
-hook.Add("OnPhysgunPickup", "CPPUnGhost", function(ply, ent)
-	if not ent.CPPGhosted then return end
-	ent.CPPGhosted = nil
-	ent:DrawShadow(true)
-
-	if ent.CPPOldColor then
-		ent:SetColor(Color(ent.CPPOldColor.r, ent.CPPOldColor.g, ent.CPPOldColor.b, ent.CPPOldColor.a))
-		ent.CPPOldColor = nil
-	end
-
-	ent:SetCollisionGroup(COLLISION_GROUP_NONE)
-
-	if ent.CPPShouldUnfreeze then
-		local phys = ent:GetPhysicsObject()
-
-		if phys:IsValid() then
-			phys:EnableMotion(true)
-		end
+		return addCount(self, str, ent)
 	end
 end)
 
