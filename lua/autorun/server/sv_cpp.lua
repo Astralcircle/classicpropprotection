@@ -85,7 +85,7 @@ hook.Add("PlayerSpawnedVehicle", "CPPAssignOwnership", function(ply, ent) CPP.Se
 local cleanupAdd = cleanup.Add
 
 function cleanup.Add(ply, type, ent)
-	if IsValid(ply) and IsValid(ent) then
+	if IsValid(ent) then
 		CPP.SetOwner(ent, ply)
 	end
 
@@ -95,7 +95,10 @@ end
 local setCreator = ENTITY.SetCreator
 
 function ENTITY:SetCreator(ply)
-	CPP.SetOwner(self, ply)
+	if IsValid(ply) then
+		CPP.SetOwner(self, ply)
+	end
+
 	return setCreator(self, ply)
 end
 
