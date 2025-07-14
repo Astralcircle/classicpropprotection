@@ -228,7 +228,7 @@ hook.Add("PlayerDisconnected", "CPP_AutoCleanup", function(ply)
 		if player.GetBySteamID(steamid) then return end
 
 		for _, v in ents.Iterator() do
-			if v.CPPOwnerID = steamid then
+			if v.CPPOwnerID == steamid then
 				v:Remove()
 			end
 		end
