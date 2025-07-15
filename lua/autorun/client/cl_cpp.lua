@@ -82,7 +82,7 @@ function CPP.ClientMenu(panel)
 			if v == LocalPlayer() then continue end
 
 			local steamid = v:SteamID()
-			local checkbox = clientpanel:CheckBox(string.format("%s(%s)", v:Nick(), steamid))
+			local checkbox = clientpanel:CheckBox(v:Nick())
 			checkbox:SetChecked(friends and friends[steamid] ~= nil)
 
 			function checkbox:OnChange(value)
