@@ -124,7 +124,7 @@ hook.Add("StartCommand", "CPPInitializePlayer", function( ply, cmd )
 			for i = 1, send_count do
 				local send_ent = send_entities[i]
 				net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
-				net.WriteUInt(CPP.GetOwner(send_ent), MAX_PLAYER_BITS)
+				net.WriteUInt(CPP.GetOwner(send_ent):EntIndex(), MAX_PLAYER_BITS)
 				net.WriteBool(i == send_count)
 			end
 
