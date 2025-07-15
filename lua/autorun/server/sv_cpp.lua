@@ -22,25 +22,73 @@ function CPP.SetOwner(ent, ply)
 
 	if not timer.Exists("CPP_SendOwners") then
 		timer.Create("CPP_SendOwners", 0, 1, function()
-			net.Start("cpp_sendowners")
+			local send_entities = {}
 
 			for _, v in ipairs(network_entities) do
 				if v:IsValid() then
-					net.WriteBool(true)
-					net.WriteUInt(v:EntIndex(), MAX_EDICT_BITS)
-
-					local owner = CPP.GetOwner(v)
-					net.WriteUInt(IsValid(owner) and owner:EntIndex() or 0, MAX_PLAYER_BITS)
+					table.insert(send_entities, v)
 				end
 			end
 
-			network_entities = {}
-			net.WriteBool(false)
+			local send_count = #send_entities
 
-			net.Broadcast()
+			if send_count > 0 then
+				net.Start("cpp_sendowners")
+
+				for i = 1, send_count do
+					local send_ent = send_entities[i]
+					net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
+
+					local owner = CPP.GetOwner(send_ent)
+					net.WriteUInt(IsValid(owner) and owner:EntIndex() or 0, MAX_PLAYER_BITS)
+					net.WriteBool(i == send_count)
+				end
+
+				net.Broadcast()
+			end
+
+			network_entities = {}
 		end)
 	end
 end
+
+-- Fix invalid owner for world entities
+local world_entities = {}
+
+hook.Add("OnEntityCreated", "CPPRefreshWorld", function(ent)
+	table.insert(world_entities, ent)
+
+	if not timer.Exists("CPP_RefreshWorld") then
+		timer.Create("CPP_RefreshWorld", 0, 1, function()
+			local send_entities = {}
+
+			for _, v in ipairs(world_entities) do
+				if v:IsValid() and IsValid(CPP.GetOwner(v)) then
+					table.insert(send_entities, v)
+				end
+			end
+
+			local send_count = #send_entities
+
+			if send_count > 0 then
+				net.Start("cpp_sendowners")
+
+				for i = 1, send_count do
+					local send_ent = send_entities[i]
+					net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
+
+					local owner = CPP.GetOwner(send_ent)
+					net.WriteUInt(IsValid(owner) and owner:EntIndex() or 0, MAX_PLAYER_BITS)
+					net.WriteBool(i == send_count)
+				end
+
+				net.Broadcast()
+			end
+
+			world_entities = {}
+		end)
+	end
+end)
 
 local load_queue = {}
 
@@ -60,21 +108,28 @@ hook.Add("StartCommand", "CPPInitializePlayer", function( ply, cmd )
 	if load_queue[ply] and not cmd:IsForced() then
 		load_queue[ply] = nil
 
-		net.Start("cpp_sendowners")
+		local send_entities = {}
 
 		for _, v in ents.Iterator() do
-			local owner = CPP.GetOwner(v)
-
-			if IsValid(owner) then
-				net.WriteBool(true)
-				net.WriteUInt(v:EntIndex(), MAX_EDICT_BITS)
-				net.WriteUInt(owner:EntIndex(), MAX_PLAYER_BITS)
+			if IsValid(CPP.GetOwner(v)) then
+				table.insert(send_entities, v)
 			end
 		end
 
-		net.WriteBool(false)
+		local send_count = #send_entities
 
-		net.Send(ply)
+		if send_count > 0 then
+			net.Start("cpp_sendowners")
+
+			for i = 1, send_count do
+				local send_ent = send_entities[i]
+				net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
+				net.WriteUInt(CPP.GetOwner(send_ent), MAX_PLAYER_BITS)
+				net.WriteBool(i == send_count)
+			end
+
+			net.Send(ply)
+		end
 	end
 end)
 
