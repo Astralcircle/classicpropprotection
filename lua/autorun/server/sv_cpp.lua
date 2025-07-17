@@ -63,7 +63,7 @@ hook.Add("OnEntityCreated", "CPPRefreshWorld", function(ent)
 			local send_entities = {}
 
 			for _, v in ipairs(world_entities) do
-				if v:IsValid() and IsValid(CPP.GetOwner(v)) then
+				if v:IsValid() and not IsValid(CPP.GetOwner(v)) then
 					table.insert(send_entities, v)
 				end
 			end
@@ -76,9 +76,7 @@ hook.Add("OnEntityCreated", "CPPRefreshWorld", function(ent)
 				for i = 1, send_count do
 					local send_ent = send_entities[i]
 					net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
-
-					local owner = CPP.GetOwner(send_ent)
-					net.WriteUInt(IsValid(owner) and owner:EntIndex() or 0, MAX_PLAYER_BITS)
+					net.WriteUInt(0, MAX_PLAYER_BITS)
 					net.WriteBool(i == send_count)
 				end
 
