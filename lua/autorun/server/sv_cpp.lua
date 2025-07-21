@@ -52,7 +52,7 @@ function CPP.SetOwner(ent, ply)
 	end
 end
 
--- Fix invalid owner for world entities
+-- Reset world entities owners
 local world_entities = {}
 
 hook.Add("OnEntityCreated", "CPPRefreshWorld", function(ent)
@@ -93,6 +93,7 @@ local load_queue = {}
 -- Restore ownership for rejoined players
 hook.Add("PlayerInitialSpawn", "CPPInitializePlayer", function(ply)
 	local steamid = ply:SteamID()
+	timer.Remove("CPP_AutoCleanup_" .. steamid)
 
 	for _, v in ents.Iterator() do
 		if v.CPPOwnerID == steamid then
@@ -244,13 +245,34 @@ concommand.Add("CPP_Cleanup", function(ply, cmd, args, argstr)
 	end
 end)
 
--- Auto-cleanup
+-- Auto-cleanup + reset owners
 hook.Add("PlayerDisconnected", "CPP_AutoCleanup", function(ply)
+	local send_entities = {}
+
+	for _, v in ents.Iterator() do
+		if CPP.GetOwner(v) == ply then
+			table.insert(send_entities, v)
+		end
+	end
+
+	local send_count = #send_entities
+
+	if send_count > 0 then
+		net.Start("cpp_sendowners")
+
+		for i = 1, send_count do
+			local send_ent = send_entities[i]
+			net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
+			net.WriteUInt(0, MAX_PLAYER_BITS)
+			net.WriteBool(i == send_count)
+		end
+
+		net.Broadcast()
+	end
+
 	local steamid = ply:SteamID()
 
 	timer.Create("CPP_AutoCleanup_" .. steamid, 300, 1, function()
-		if player.GetBySteamID(steamid) then return end
-
 		for _, v in ents.Iterator() do
 			if v.CPPOwnerID == steamid then
 				v:Remove()
