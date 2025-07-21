@@ -92,8 +92,10 @@ local load_queue = {}
 
 -- Restore ownership for rejoined players
 hook.Add("PlayerInitialSpawn", "CPPInitializePlayer", function(ply)
+	local steamid = ply:SteamID()
+
 	for _, v in ents.Iterator() do
-		if v.CPPOwnerID == ply:SteamID() then
+		if v.CPPOwnerID == steamid then
 			CPP.SetOwner(v, ply)
 		end
 	end
