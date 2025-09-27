@@ -27,11 +27,15 @@ function CPP.CanTouch(ply, ent)
 	end
 end
 
-hook.Add("CanEditVariable", "CPPCheckPermission", function(ent, ply, key, val, editor)if not CPP.CanTouch(ply, ent) then return false end end)
-hook.Add("CanPlayerUnfreeze", "CPPCheckPermission", function(ply, ent)if not CPP.CanTouch(ply, ent) then return false end end)
-hook.Add("CanProperty", "CPPCheckPermission", function(ply, property, ent)if not CPP.CanTouch(ply, ent) then return false end end)
+-- CPPI checks
+hook.Add("CanEditVariable", "CPPCheckPermission", function(ent, ply, key, val, editor) if not CPP.CanTouch(ply, ent) then return false end end)
+hook.Add("CanPlayerUnfreeze", "CPPCheckPermission", function(ply, ent) if not CPP.CanTouch(ply, ent) then return false end end)
 hook.Add("CanTool", "CPPCheckPermission", function(ply, tr, toolname, tool, button) if tr.Entity:IsValid() and not CPP.CanTouch(ply, tr.Entity) then return false end end)
-hook.Add("PhysgunPickup", "CPPCheckPermission", function(ply, ent)if not CPP.CanTouch(ply, ent) then return false end end)
+hook.Add("PhysgunPickup", "CPPCheckPermission", function(ply, ent) if not CPP.CanTouch(ply, ent) then return false end end)
+
+if SERVER then
+	hook.Add("CanProperty", "CPPCheckPermission", function(ply, property, ent) if not CPP.CanTouch(ply, ent) then return false end end)
+end
 
 -- CPPI
 CPPI = CPPI or {}
