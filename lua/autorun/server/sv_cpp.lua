@@ -198,9 +198,9 @@ util.AddNetworkString("cpp_notify")
 
 -- Cleanup
 concommand.Add("CPP_Cleanup", function(ply, cmd, args, argstr)
-	if not ply.CPPCanCleanup then return end
+	if not ply.CPPCanCleanup or not args[1] then return end
 
-	if argstr == "disconnected" then
+	if args[1] == "disconnected" then
 		for _, v in ents.Iterator() do
 			local owner = CPP.GetOwner(v)
 
@@ -214,7 +214,7 @@ concommand.Add("CPP_Cleanup", function(ply, cmd, args, argstr)
 		net.WriteString("disconnected")
 		net.Broadcast()
 	else
-		local target_owner = player.GetBySteamID(argstr)
+		local target_owner = player.GetBySteamID(args[1])
 		if not target_owner then return end
 
 		for _, v in ents.Iterator() do
