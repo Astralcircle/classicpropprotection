@@ -88,8 +88,6 @@ hook.Add("OnEntityCreated", "CPPRefreshWorld", function(ent)
 	end
 end)
 
-local load_queue = {}
-
 -- Restore ownership for rejoined players
 hook.Add("PlayerInitialSpawn", "CPPInitializePlayer", function(ply)
 	local steamid = ply:SteamID()
@@ -101,36 +99,27 @@ hook.Add("PlayerInitialSpawn", "CPPInitializePlayer", function(ply)
 		end
 	end
 
-	load_queue[ply] = true
-end)
+	local send_entities = {}
 
--- Send touch data to new players
-hook.Add("StartCommand", "CPPInitializePlayer", function( ply, cmd )
-	if load_queue[ply] and not cmd:IsForced() then
-		load_queue[ply] = nil
+	for _, v in ents.Iterator() do
+		if IsValid(CPP.GetOwner(v)) then
+			table.insert(send_entities, v)
+		end
+	end
 
-		local send_entities = {}
+	local send_count = #send_entities
 
-		for _, v in ents.Iterator() do
-			if IsValid(CPP.GetOwner(v)) then
-				table.insert(send_entities, v)
-			end
+	if send_count > 0 then
+		net.Start("cpp_sendowners")
+
+		for i = 1, send_count do
+			local send_ent = send_entities[i]
+			net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
+			net.WriteUInt(CPP.GetOwner(send_ent):EntIndex(), MAX_PLAYER_BITS)
+			net.WriteBool(i == send_count)
 		end
 
-		local send_count = #send_entities
-
-		if send_count > 0 then
-			net.Start("cpp_sendowners")
-
-			for i = 1, send_count do
-				local send_ent = send_entities[i]
-				net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
-				net.WriteUInt(CPP.GetOwner(send_ent):EntIndex(), MAX_PLAYER_BITS)
-				net.WriteBool(i == send_count)
-			end
-
-			net.Send(ply)
-		end
+		net.Send(ply)
 	end
 end)
 
