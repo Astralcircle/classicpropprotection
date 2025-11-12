@@ -11,7 +11,6 @@ end
 util.AddNetworkString("cpp_sendowners")
 
 local network_entities = {}
-MAX_PLAYER_BITS = MAX_PLAYER_BITS or math.ceil(math.log(1 + game.MaxPlayers()) / math.log(2))
 
 function CPP.SetOwner(ent, ply)
 	if CPP.GetOwner(ent) == ply then return end

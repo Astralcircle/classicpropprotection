@@ -7,8 +7,6 @@ function CPP.GetOwner(ent)
 	return index and Entity(index)
 end
 
-local MAX_PLAYER_BITS = math.ceil(math.log(1 + game.MaxPlayers()) / math.log(2))
-
 net.Receive("cpp_sendowners", function()
 	repeat
 		local entindex, plyindex = net.ReadUInt(MAX_EDICT_BITS), net.ReadUInt(MAX_PLAYER_BITS)
