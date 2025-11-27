@@ -10,7 +10,12 @@ end
 net.Receive("cpp_sendowners", function()
 	repeat
 		local entindex, plyindex = net.ReadUInt(MAX_EDICT_BITS), net.ReadUInt(MAX_PLAYER_BITS)
-		CPP.EntOwners[entindex] = plyindex == 0 and -1 or plyindex
+
+		if plyindex == 0 then
+			CPP.EntOwners[entindex] = nil
+		else
+			CPP.EntOwners[entindex] = plyindex
+		end
 	until net.ReadBool()
 end)
 
