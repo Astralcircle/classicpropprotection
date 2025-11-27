@@ -62,7 +62,7 @@ hook.Add("OnEntityCreated", "CPPRefreshWorld", function(ent)
 			local send_entities = {}
 
 			for _, v in ipairs(world_entities) do
-				if v:IsValid() and not IsValid(CPP.GetOwner(v)) and not v:IsEFlagSet(EFL_SERVER_ONLY) then
+				if v:IsValid() and not IsValid(CPP.GetOwner(v)) and v:IsSolid() and not v:IsEFlagSet(EFL_SERVER_ONLY) then
 					table.insert(send_entities, v)
 				end
 			end
