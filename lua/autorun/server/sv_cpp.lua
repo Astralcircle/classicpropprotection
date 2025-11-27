@@ -24,7 +24,7 @@ function CPP.SetOwner(ent, ply)
 			local send_entities = {}
 
 			for _, v in ipairs(network_entities) do
-				if v:IsValid() then
+				if v:IsValid() and not v:IsEFlagSet(EFL_SERVER_ONLY) then
 					table.insert(send_entities, v)
 				end
 			end
@@ -62,7 +62,7 @@ hook.Add("OnEntityCreated", "CPPRefreshWorld", function(ent)
 			local send_entities = {}
 
 			for _, v in ipairs(world_entities) do
-				if v:IsValid() and not IsValid(CPP.GetOwner(v)) then
+				if v:IsValid() and not v:IsEFlagSet(EFL_SERVER_ONLY) and not IsValid(CPP.GetOwner(v)) then
 					table.insert(send_entities, v)
 				end
 			end
@@ -101,7 +101,7 @@ hook.Add("PlayerInitialSpawn", "CPPInitializePlayer", function(ply)
 	local send_entities = {}
 
 	for _, v in ents.Iterator() do
-		if IsValid(CPP.GetOwner(v)) then
+		if IsValid(CPP.GetOwner(v)) and not v:IsEFlagSet(EFL_SERVER_ONLY) then
 			table.insert(send_entities, v)
 		end
 	end
@@ -238,7 +238,7 @@ hook.Add("PlayerDisconnected", "CPP_AutoCleanup", function(ply)
 	local send_entities = {}
 
 	for _, v in ents.Iterator() do
-		if CPP.GetOwner(v) == ply then
+		if CPP.GetOwner(v) == ply and not v:IsEFlagSet(EFL_SERVER_ONLY) then
 			table.insert(send_entities, v)
 		end
 	end
