@@ -12,20 +12,23 @@ util.AddNetworkString("cpp_sendowners")
 
 local network_entities = {}
 
-function CPP.SetOwner(ent, ply)
-	if CPP.GetOwner(ent) == ply then return end
-
-	ent.CPPOwner = ply
-	ent.CPPOwnerID = IsValid(ply) and ply:SteamID()
-	table.insert(network_entities, ent)
+local function ProcessEntities(ent)
+	if not ent.CPPNetworking then
+		table.insert(network_entities, ent)
+		ent.CPPNetworking = true
+	end
 
 	if not timer.Exists("CPP_SendOwners") then
 		timer.Create("CPP_SendOwners", 0, 1, function()
 			local send_entities = {}
 
 			for _, v in ipairs(network_entities) do
-				if v:IsValid() and not v:IsEFlagSet(EFL_SERVER_ONLY) then
-					table.insert(send_entities, v)
+				if v:IsValid() then
+					if not v:IsEFlagSet(EFL_SERVER_ONLY) then
+						table.insert(send_entities, v)
+					end
+
+					v.CPPNetworking = nil
 				end
 			end
 
@@ -51,40 +54,16 @@ function CPP.SetOwner(ent, ply)
 	end
 end
 
--- Reset world entities owners
-local world_entities = {}
+function CPP.SetOwner(ent, ply)
+	if CPP.GetOwner(ent) == ply then return end
+
+	ent.CPPOwner = ply
+	ent.CPPOwnerID = IsValid(ply) and ply:SteamID()
+	ProcessEntities(ent)
+end
 
 hook.Add("OnEntityCreated", "CPPRefreshWorld", function(ent)
-	table.insert(world_entities, ent)
-
-	if not timer.Exists("CPP_RefreshWorld") then
-		timer.Create("CPP_RefreshWorld", 0, 1, function()
-			local send_entities = {}
-
-			for _, v in ipairs(world_entities) do
-				if v:IsValid() and not IsValid(CPP.GetOwner(v)) and v:IsSolid() and not v:IsEFlagSet(EFL_SERVER_ONLY) then
-					table.insert(send_entities, v)
-				end
-			end
-
-			local send_count = #send_entities
-
-			if send_count > 0 then
-				net.Start("cpp_sendowners")
-
-				for i = 1, send_count do
-					local send_ent = send_entities[i]
-					net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
-					net.WriteUInt(0, MAX_PLAYER_BITS)
-					net.WriteBool(i == send_count)
-				end
-
-				net.Broadcast()
-			end
-
-			world_entities = {}
-		end)
-	end
+	ProcessEntities(ent)
 end)
 
 -- Restore ownership for rejoined players
