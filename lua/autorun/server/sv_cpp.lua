@@ -20,31 +20,23 @@ local function ProcessEntities(ent)
 
 	if not timer.Exists("CPP_SendOwners") then
 		timer.Create("CPP_SendOwners", 0, 1, function()
-			local send_entities = {}
+			local created = false
 
-			for _, v in ipairs(network_entities) do
-				if v:IsValid() then
-					if not v:IsEFlagSet(EFL_SERVER_ONLY) then
-						table.insert(send_entities, v)
+			for _, ent in ipairs(network_entities) do
+				if ent:IsValid() then
+					if not ent:IsEFlagSet(EFL_SERVER_ONLY) then
+						if not created then net.Start("cpp_sendowners") created = true end
+						net.WriteUInt(ent:EntIndex(), MAX_EDICT_BITS)
+
+						local owner = CPP.GetOwner(ent)
+						net.WriteUInt(IsValid(owner) and owner:EntIndex() or 0, MAX_PLAYER_BITS)
 					end
 
-					v.CPPNetworking = nil
+					ent.CPPNetworking = nil
 				end
 			end
 
-			local send_count = #send_entities
-
-			if send_count > 0 then
-				net.Start("cpp_sendowners")
-
-				for i = 1, send_count do
-					local send_ent = send_entities[i]
-					net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
-
-					local owner = CPP.GetOwner(send_ent)
-					net.WriteUInt(IsValid(owner) and owner:EntIndex() or 0, MAX_PLAYER_BITS)
-				end
-
+			if created then
 				net.Broadcast()
 			end
 
@@ -61,52 +53,44 @@ function CPP.SetOwner(ent, ply)
 	ProcessEntities(ent)
 end
 
-hook.Add("OnEntityCreated", "CPPRefreshWorld", function(ent)
+hook.Add("OnEntityCreated", "CPP_RefreshWorld", function(ent)
 	ProcessEntities(ent)
 end)
 
 -- Restore ownership for rejoined players
-hook.Add("PlayerInitialSpawn", "CPPInitializePlayer", function(ply)
+hook.Add("PlayerInitialSpawn", "CPP_InitializePlayer", function(ply)
 	local steamid = ply:SteamID()
-	timer.Remove("CPP_AutoCleanup_" .. steamid)
+	timer.Remove("CPP_AutoCleanup" .. steamid)
 
-	for _, v in ents.Iterator() do
-		if v.CPPOwnerID == steamid then
-			CPP.SetOwner(v, ply)
+	local created = false
+
+	for _, ent in ents.Iterator() do
+		local owner = CPP.GetOwner(ent)
+
+		if IsValid(owner) and not ent:IsEFlagSet(EFL_SERVER_ONLY) then
+			if not created then net.Start("cpp_sendowners") created = true end
+			net.WriteUInt(ent:EntIndex(), MAX_EDICT_BITS)
+			net.WriteUInt(owner:EntIndex(), MAX_PLAYER_BITS)
+		end
+
+		if ent.CPPOwnerID == steamid then
+			CPP.SetOwner(ent, ply)
 		end
 	end
 
-	local send_entities = {}
-
-	for _, v in ents.Iterator() do
-		if IsValid(CPP.GetOwner(v)) and not v:IsEFlagSet(EFL_SERVER_ONLY) then
-			table.insert(send_entities, v)
-		end
-	end
-
-	local send_count = #send_entities
-
-	if send_count > 0 then
-		net.Start("cpp_sendowners")
-
-		for i = 1, send_count do
-			local send_ent = send_entities[i]
-			net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
-			net.WriteUInt(CPP.GetOwner(send_ent):EntIndex(), MAX_PLAYER_BITS)
-		end
-
+	if created then
 		net.Send(ply)
 	end
 end)
 
 -- Define ownership
-hook.Add("PlayerSpawnedEffect", "CPPAssignOwnership", function(ply, model, ent) CPP.SetOwner(ent, ply) end)
-hook.Add("PlayerSpawnedNPC", "CPPAssignOwnership", function(ply, ent) CPP.SetOwner(ent, ply) end)
-hook.Add("PlayerSpawnedProp", "CPPAssignOwnership", function(ply, model, ent) CPP.SetOwner(ent, ply) end)
-hook.Add("PlayerSpawnedRagdoll", "CPPAssignOwnership", function(ply, model, ent) CPP.SetOwner(ent, ply) end)
-hook.Add("PlayerSpawnedSENT", "CPPAssignOwnership", function(ply, ent) CPP.SetOwner(ent, ply) end)
-hook.Add("PlayerSpawnedSWEP", "CPPAssignOwnership", function(ply, ent) CPP.SetOwner(ent, ply) end)
-hook.Add("PlayerSpawnedVehicle", "CPPAssignOwnership", function(ply, ent) CPP.SetOwner(ent, ply) end)
+hook.Add("PlayerSpawnedEffect", "CPP_AssignOwnership", function(ply, model, ent) CPP.SetOwner(ent, ply) end)
+hook.Add("PlayerSpawnedNPC", "CPP_AssignOwnership", function(ply, ent) CPP.SetOwner(ent, ply) end)
+hook.Add("PlayerSpawnedProp", "CPP_AssignOwnership", function(ply, model, ent) CPP.SetOwner(ent, ply) end)
+hook.Add("PlayerSpawnedRagdoll", "CPP_AssignOwnership", function(ply, model, ent) CPP.SetOwner(ent, ply) end)
+hook.Add("PlayerSpawnedSENT", "CPP_AssignOwnership", function(ply, ent) CPP.SetOwner(ent, ply) end)
+hook.Add("PlayerSpawnedSWEP", "CPP_AssignOwnership", function(ply, ent) CPP.SetOwner(ent, ply) end)
+hook.Add("PlayerSpawnedVehicle", "CPP_AssignOwnership", function(ply, ent) CPP.SetOwner(ent, ply) end)
 
 local cleanupAdd = cleanup.Add
 
@@ -128,7 +112,7 @@ function ENTITY:SetCreator(ply)
 	return setCreator(self, ply)
 end
 
-hook.Add("PostGamemodeLoaded", "CPPOverrideFunctions", function()
+hook.Add("PostGamemodeLoaded", "CPP_OverrideFunctions", function()
 	local PLAYER = FindMetaTable("Player")
 	local addCount = PLAYER.AddCount
 
@@ -157,7 +141,7 @@ net.Receive("cpp_friends", function(len, ply)
 	net.Broadcast()
 end)
 
-hook.Add("PlayerDisconnected", "CPPCleanupFriends", function(ply)
+hook.Add("PlayerDisconnected", "CPP_CleanupFriends", function(ply)
 	for _, friend in player.Iterator() do
 		if friend.CPPFriends then
 			friend.CPPFriends[ply] = nil
@@ -177,11 +161,11 @@ concommand.Add("CPP_Cleanup", function(ply, cmd, args, argstr)
 	if not ply.CPPCanCleanup or not args[1] then return end
 
 	if args[1] == "disconnected" then
-		for _, v in ents.Iterator() do
-			local owner = CPP.GetOwner(v)
+		for _, ent in ents.Iterator() do
+			local owner = CPP.GetOwner(ent)
 
 			if owner ~= nil and not owner:IsValid() then
-				v:Remove()
+				ent:Remove()
 			end
 		end
 
@@ -193,13 +177,13 @@ concommand.Add("CPP_Cleanup", function(ply, cmd, args, argstr)
 		local target_owner = player.GetBySteamID(args[1])
 		if not target_owner then return end
 
-		for _, v in ents.Iterator() do
-			if v:IsWeapon() and v:GetOwner():IsValid() then
+		for _, ent in ents.Iterator() do
+			if ent:IsWeapon() and ent:GetOwner():IsValid() then
 				continue
 			end
 
-			if CPP.GetOwner(v) == target_owner then
-				v:Remove()
+			if CPP.GetOwner(ent) == target_owner then
+				ent:Remove()
 			end
 		end
 
@@ -212,41 +196,33 @@ end)
 
 -- Auto-cleanup + reset owners
 hook.Add("PlayerDisconnected", "CPP_AutoCleanup", function(ply)
-	local send_entities = {}
+	local created = false
 
-	for _, v in ents.Iterator() do
-		if CPP.GetOwner(v) == ply and not v:IsEFlagSet(EFL_SERVER_ONLY) then
-			table.insert(send_entities, v)
+	for _, ent in ents.Iterator() do
+		if CPP.GetOwner(ent) == ply and not ent:IsEFlagSet(EFL_SERVER_ONLY) then
+			if not created then net.Start("cpp_sendowners") created = true end
+			net.WriteUInt(ent:EntIndex(), MAX_EDICT_BITS)
+			net.WriteUInt(0, MAX_PLAYER_BITS)
 		end
 	end
 
-	local send_count = #send_entities
-
-	if send_count > 0 then
-		net.Start("cpp_sendowners")
-
-		for i = 1, send_count do
-			local send_ent = send_entities[i]
-			net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
-			net.WriteUInt(0, MAX_PLAYER_BITS)
-		end
-
+	if created then
 		net.Broadcast()
 	end
 
 	local steamid = ply:SteamID()
 
-	timer.Create("CPP_AutoCleanup_" .. steamid, 300, 1, function()
-		for _, v in ents.Iterator() do
-			if v.CPPOwnerID == steamid then
-				v:Remove()
+	timer.Create("CPP_AutoCleanup" .. steamid, 300, 1, function()
+		for _, ent in ents.Iterator() do
+			if ent.CPPOwnerID == steamid then
+				ent:Remove()
 			end
 		end
 	end)
 end)
 
 -- CAMI rights
-hook.Add("PlayerInitialSpawn", "CPPSetupRights", function(ply)
+hook.Add("PlayerInitialSpawn", "CPP_SetupRights", function(ply)
 	timer.Simple(0, function()
 		if not ply:IsValid() then return end
 

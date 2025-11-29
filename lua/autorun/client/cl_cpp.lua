@@ -44,7 +44,6 @@ local color_background = Color(0, 0, 0, 110)
 local color_green = Color(0, 255, 0)
 local color_red = Color(255, 0, 0)
 
--- HUD
 hook.Add("HUDPaint", "CPPInfoBox", function()
 	if not draw_hud:GetBool() then return end
 
