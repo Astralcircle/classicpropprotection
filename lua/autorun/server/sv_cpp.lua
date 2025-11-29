@@ -43,7 +43,6 @@ local function ProcessEntities(ent)
 
 					local owner = CPP.GetOwner(send_ent)
 					net.WriteUInt(IsValid(owner) and owner:EntIndex() or 0, MAX_PLAYER_BITS)
-					net.WriteBool(i == send_count)
 				end
 
 				net.Broadcast()
@@ -94,7 +93,6 @@ hook.Add("PlayerInitialSpawn", "CPPInitializePlayer", function(ply)
 			local send_ent = send_entities[i]
 			net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
 			net.WriteUInt(CPP.GetOwner(send_ent):EntIndex(), MAX_PLAYER_BITS)
-			net.WriteBool(i == send_count)
 		end
 
 		net.Send(ply)
@@ -231,7 +229,6 @@ hook.Add("PlayerDisconnected", "CPP_AutoCleanup", function(ply)
 			local send_ent = send_entities[i]
 			net.WriteUInt(send_ent:EntIndex(), MAX_EDICT_BITS)
 			net.WriteUInt(0, MAX_PLAYER_BITS)
-			net.WriteBool(i == send_count)
 		end
 
 		net.Broadcast()

@@ -7,8 +7,8 @@ function CPP.GetOwner(ent)
 	return index and Entity(index)
 end
 
-net.Receive("cpp_sendowners", function()
-	repeat
+net.Receive("cpp_sendowners", function(length)
+	for i = 1, length / (MAX_EDICT_BITS + MAX_PLAYER_BITS) do
 		local entindex, plyindex = net.ReadUInt(MAX_EDICT_BITS), net.ReadUInt(MAX_PLAYER_BITS)
 
 		if plyindex == 0 then
@@ -16,7 +16,7 @@ net.Receive("cpp_sendowners", function()
 		else
 			CPP.EntOwners[entindex] = plyindex
 		end
-	until net.ReadBool()
+	end
 end)
 
 net.Receive("cpp_notify", function()
