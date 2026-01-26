@@ -6,7 +6,7 @@ function CPP.CanTouch(ply, ent)
 
 	if owner ~= ply then
 		if not IsValid(owner) then
-			return ply:GetNW2Bool("CPP_TouchEverything") and ply:GetInfoNum("cpp_ignoreworldprops", 1) == 0
+			return (ply:GetNW2Bool("CPP_TouchEverything") or ply == ent) and ply:GetInfoNum("cpp_ignoreworldprops", 1) == 0
 		end
 
 		if ply:GetInfoNum("cpp_ignoreothersprops", 0) == 0 then
@@ -122,3 +122,4 @@ CAMI.RegisterPrivilege({
 	Name = "CPP_TouchEverything",
     MinAccess = "admin"
 })
+
