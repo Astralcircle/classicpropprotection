@@ -53,9 +53,8 @@ function CPP.SetOwner(ent, ply)
 	ProcessEntities(ent)
 end
 
-hook.Add("OnEntityCreated", "CPP_RefreshWorld", function(ent)
-	ProcessEntities(ent)
-end)
+-- Prevent entindexes conflict
+hook.Add("OnEntityCreated", "CPP_RefreshWorld", ProcessEntities)
 
 -- Restore ownership for rejoined players
 hook.Add("PlayerInitialSpawn", "CPP_InitializePlayer", function(ply)
