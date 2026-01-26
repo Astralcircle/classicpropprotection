@@ -10,7 +10,7 @@ function CPP.CanTouch(ply, ent)
 		end
 
 		if ply:GetInfoNum("cpp_ignoreothersprops", 0) == 0 then
-			if ply:GetNW2Bool("CPP_TouchEverything") then
+			if ply:GetNW2Bool("CPP_TouchEverything") or ply == ent then
 				return true
 			end
 
