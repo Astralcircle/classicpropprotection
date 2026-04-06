@@ -28,13 +28,13 @@ function CPP.CanTouch(ply, ent)
 end
 
 -- CPPI checks
-hook.Add("CanEditVariable", "CPPCheckPermission", function(ent, ply, key, val, editor) if not CPP.CanTouch(ply, ent) then return false end end)
-hook.Add("CanPlayerUnfreeze", "CPPCheckPermission", function(ply, ent) if not CPP.CanTouch(ply, ent) then return false end end)
-hook.Add("CanTool", "CPPCheckPermission", function(ply, tr, toolname, tool, button) if tr.Entity:IsValid() and not CPP.CanTouch(ply, tr.Entity) then return false end end)
-hook.Add("PhysgunPickup", "CPPCheckPermission", function(ply, ent) if not CPP.CanTouch(ply, ent) then return false end end)
+hook.Add("CanEditVariable", "CPP_CheckPermission", function(ent, ply, key, val, editor) if not CPP.CanTouch(ply, ent) then return false end end)
+hook.Add("CanPlayerUnfreeze", "CPP_CheckPermission", function(ply, ent) if not CPP.CanTouch(ply, ent) then return false end end)
+hook.Add("CanTool", "CPP_CheckPermission", function(ply, tr, toolname, tool, button) if tr.Entity:IsValid() and not CPP.CanTouch(ply, tr.Entity) then return false end end)
+hook.Add("PhysgunPickup", "CPP_CheckPermission", function(ply, ent) if not CPP.CanTouch(ply, ent) then return false end end)
 
 if SERVER then
-	hook.Add("CanProperty", "CPPCheckPermission", function(ply, property, ent) if not CPP.CanTouch(ply, ent) then return false end end)
+	hook.Add("CanProperty", "CPP_CheckPermission", function(ply, property, ent) if not CPP.CanTouch(ply, ent) then return false end end)
 end
 
 -- CPPI
@@ -113,7 +113,7 @@ if SERVER then
 	end
 end
 
-hook.Add("Initialize", "CPPRegisterCAMI", function()
+hook.Add("Initialize", "CPP_RegisterCAMI", function()
 	if CAMI then
 		CAMI.RegisterPrivilege({
 			Name = "CPP_Cleanup",

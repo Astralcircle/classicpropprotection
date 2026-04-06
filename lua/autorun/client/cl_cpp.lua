@@ -44,7 +44,7 @@ local color_background = Color(0, 0, 0, 110)
 local color_green = Color(0, 255, 0)
 local color_red = Color(255, 0, 0)
 
-hook.Add("HUDPaint", "CPPInfoBox", function()
+hook.Add("HUDPaint", "CPP_InfoBox", function()
 	if not draw_hud:GetBool() then return end
 
 	local ent = LocalPlayer():GetEyeTrace().Entity
@@ -117,7 +117,7 @@ function CPP.AdminMenu(panel)
 	end
 end
 
-hook.Add("SpawnMenuOpened", "CPPToolMenu", function()
+hook.Add("SpawnMenuOpened", "CPP_ToolMenu", function()
 	if IsValid(clientpanel) then
 		CPP.ClientMenu()
 	end
@@ -127,7 +127,7 @@ hook.Add("SpawnMenuOpened", "CPPToolMenu", function()
 	end
 end)
 
-hook.Add("PopulateToolMenu", "CPPToolMenu", function()
+hook.Add("PopulateToolMenu", "CPP_ToolMenu", function()
 	spawnmenu.AddToolMenuOption("Utilities", "Prop Protection", "CPP_Cleanup", "Admin", "", "", CPP.AdminMenu)
 	spawnmenu.AddToolMenuOption("Utilities", "Prop Protection", "CPP_Friends", "Client", "", "", CPP.ClientMenu)
 end)
