@@ -115,11 +115,10 @@ end
 
 CAMI.RegisterPrivilege({
 	Name = "CPP_Cleanup",
-    MinAccess = "admin"
+	MinAccess = "admin"
 })
 
 CAMI.RegisterPrivilege({
 	Name = "CPP_TouchEverything",
-    MinAccess = "admin"
+	MinAccess = "admin"
 })
-
