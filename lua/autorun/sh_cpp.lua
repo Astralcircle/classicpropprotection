@@ -113,12 +113,16 @@ if SERVER then
 	end
 end
 
-CAMI.RegisterPrivilege({
-	Name = "CPP_Cleanup",
-	MinAccess = "admin"
-})
+hook.Add("Initialize", "CPPRegisterCAMI", function()
+	if CAMI then
+		CAMI.RegisterPrivilege({
+			Name = "CPP_Cleanup",
+			MinAccess = "admin"
+		})
 
-CAMI.RegisterPrivilege({
-	Name = "CPP_TouchEverything",
-	MinAccess = "admin"
-})
+		CAMI.RegisterPrivilege({
+			Name = "CPP_TouchEverything",
+			MinAccess = "admin"
+		})
+	end
+end)

@@ -225,16 +225,21 @@ hook.Add("PlayerInitialSpawn", "CPP_SetupRights", function(ply)
 	timer.Simple(0, function()
 		if not ply:IsValid() then return end
 
-		CAMI.PlayerHasAccess(ply, "CPP_Cleanup", function(bool)
-			if bool then
-				ply.CPPCanCleanup = true
-			end
-		end)
+		if CAMI then
+			CAMI.PlayerHasAccess(ply, "CPP_Cleanup", function(bool)
+				if bool then
+					ply.CPPCanCleanup = true
+				end
+			end)
 
-		CAMI.PlayerHasAccess(ply, "CPP_TouchEverything", function(bool)
-			if bool then
-				ply:SetNW2Bool("CPP_TouchEverything", true)
-			end
-		end)
+			CAMI.PlayerHasAccess(ply, "CPP_TouchEverything", function(bool)
+				if bool then
+					ply:SetNW2Bool("CPP_TouchEverything", true)
+				end
+			end)
+		elseif ply:IsAdmin() then
+			ply.CPPCanCleanup = true
+			ply:SetNW2Bool("CPP_TouchEverything", true)
+		end
 	end)
 end)
