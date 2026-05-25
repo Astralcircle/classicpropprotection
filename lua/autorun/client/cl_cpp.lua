@@ -75,6 +75,11 @@ function CPP.ClientMenu(panel)
 
 	clientpanel:Help("Add friends:")
 
+	local quickfilter = vgui.Create("DTextEntry", adminmenu)
+	quickfilter:SetPlaceholderText("#spawnmenu.quick_filter")
+	quickfilter:SetUpdateOnType(true)
+	clientpanel:AddItem(quickfilter)
+
 	local players = player.GetAll()
 	local friends = CPP.Friends[LocalPlayer():SteamID()]
 	table.sort(players, function(a, b) return a:Nick() < b:Nick() end)
@@ -107,13 +112,30 @@ function CPP.AdminMenu(panel)
 
 	adminmenu:Clear()
 	adminmenu:Help("Cleanup players:")
-	adminmenu:Button("Cleanup disconnected props", "CPP_Cleanup", "disconnected")
+
+	local quickfilter = vgui.Create("DTextEntry", adminmenu)
+	quickfilter:SetPlaceholderText("#spawnmenu.quick_filter")
+	quickfilter:SetUpdateOnType(true)
+	adminmenu:AddItem(quickfilter)
+
+	local buttons = {}
+	table.insert(buttons, adminmenu:Button("Cleanup disconnected props", "CPP_Cleanup", "disconnected"))
 
 	local players = player.GetAll()
 	table.sort(players, function(a, b) return a:Nick() < b:Nick() end)
 
-	for _, v in ipairs(players) do
-		adminmenu:Button("Cleanup " .. v:Nick(), "CPP_Cleanup", v:SteamID())
+	for _, ply in ipairs(players) do
+		table.insert(buttons, adminmenu:Button("Cleanup " .. ply:Nick(), "CPP_Cleanup", ply:SteamID()))
+	end
+
+	function quickfilter:OnValueChange(value)
+		for _, button in ipairs(buttons) do
+			local parent = button:GetParent()
+			local matched = string.find(string.lower(button:GetText()), value, nil, true) ~= nil
+			parent:SetSizeY(matched)
+			parent:SetTall(matched and 20 or 0)
+			parent:SetVisible(matched)
+		end
 	end
 end
 
