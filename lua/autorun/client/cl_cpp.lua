@@ -86,6 +86,7 @@ function CPP.ClientMenu(panel)
 		clientpanel:AddItem(quickfilter)
 
 		local buttons = {}
+		local checkmark = Material("icon16/accept.png")
 
 		function quickfilter:OnValueChange(value)
 			for _, button in ipairs(buttons) do
@@ -107,8 +108,8 @@ function CPP.ClientMenu(panel)
 
 			function button:PaintOver(w, h)
 				if self.Friend then
+					surface.SetMaterial(checkmark)
 					surface.SetDrawColor(255, 255, 255)
-					surface.SetMaterial(Material("icon16/accept.png"))
 					surface.DrawTexturedRect(5, h / 2 - 8, 16, 16)
 				end
 			end
