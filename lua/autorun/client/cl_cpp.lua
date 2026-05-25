@@ -75,27 +75,51 @@ function CPP.ClientMenu(panel)
 
 	clientpanel:Help("Add friends:")
 
-	local quickfilter = vgui.Create("DTextEntry", adminmenu)
-	quickfilter:SetPlaceholderText("#spawnmenu.quick_filter")
-	quickfilter:SetUpdateOnType(true)
-	clientpanel:AddItem(quickfilter)
-
 	local players = player.GetAll()
 	local friends = CPP.Friends[LocalPlayer():SteamID()]
 	table.sort(players, function(a, b) return a:Nick() < b:Nick() end)
 
 	if #players > 1 then
+		local quickfilter = vgui.Create("DTextEntry", adminmenu)
+		quickfilter:SetPlaceholderText("#spawnmenu.quick_filter")
+		quickfilter:SetUpdateOnType(true)
+		clientpanel:AddItem(quickfilter)
+
+		local buttons = {}
+
+		function quickfilter:OnValueChange(value)
+			for _, button in ipairs(buttons) do
+				local parent = button:GetParent()
+				local matched = string.find(string.lower(button:GetText()), value, nil, true) ~= nil
+				parent:SetSizeY(matched)
+				parent:SetTall(matched and 20 or 0)
+				parent:SetVisible(matched)
+			end
+		end
+
 		for _, v in ipairs(players) do
 			if v == LocalPlayer() then continue end
 
 			local steamid = v:SteamID()
-			local checkbox = clientpanel:CheckBox(v:Nick())
-			checkbox:SetChecked(friends and friends[steamid] ~= nil)
+			local button = clientpanel:Button(v:Nick())
+			button.Friend = friends and friends[steamid] ~= nil
+			table.insert(buttons, button)
 
-			function checkbox:OnChange(value)
+			function button:PaintOver(w, h)
+				if self.Friend then
+					surface.SetDrawColor(255, 255, 255)
+					surface.SetMaterial(Material("icon16/accept.png"))
+					surface.DrawTexturedRect(5, h / 2 - 8, 16, 16)
+				end
+			end
+
+			function button:DoClick()
+				local friend = not self.Friend
+				self.Friend = friend
+
 				net.Start("cpp_friends")
 				net.WriteString(steamid)
-				net.WriteBool(value)
+				net.WriteBool(friend)
 				net.SendToServer()
 			end
 		end
