@@ -89,6 +89,8 @@ function CPP.ClientMenu(panel)
 		local checkmark = Material("icon16/accept.png")
 
 		function quickfilter:OnValueChange(value)
+			value = string.lower(string.Trim(value))
+
 			for _, button in ipairs(buttons) do
 				local parent = button:GetParent()
 				local matched = string.find(string.lower(button:GetText()), value, nil, true) ~= nil
@@ -154,6 +156,8 @@ function CPP.AdminMenu(panel)
 	end
 
 	function quickfilter:OnValueChange(value)
+		value = string.lower(string.Trim(value))
+
 		for _, button in ipairs(buttons) do
 			local parent = button:GetParent()
 			local matched = string.find(string.lower(button:GetText()), value, nil, true) ~= nil
