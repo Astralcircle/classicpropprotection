@@ -92,6 +92,7 @@ hook.Add("PlayerSpawnedSWEP", "CPP_AssignOwnership", function(ply, ent) CPP.SetO
 hook.Add("PlayerSpawnedVehicle", "CPP_AssignOwnership", function(ply, ent) CPP.SetOwner(ent, ply) end)
 
 local cleanupAdd = cleanup.Add
+local cleanupReplaceEntity = cleanup.ReplaceEntity
 
 function cleanup.Add(ply, type, ent)
 	if IsValid(ent) then
@@ -99,6 +100,16 @@ function cleanup.Add(ply, type, ent)
 	end
 
 	return cleanupAdd(ply, type, ent)
+end
+
+function cleanup.ReplaceEntity(from, to)
+	local action_taken = cleanupReplaceEntity(from, to)
+
+	if action_taken and IsValid(to) then
+		to:CPPISetOwner(from:CPPIGetOwner())
+	end
+
+	return action_taken
 end
 
 local setCreator = ENTITY.SetCreator
