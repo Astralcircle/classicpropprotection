@@ -103,13 +103,11 @@ function cleanup.Add(ply, type, ent)
 end
 
 function cleanup.ReplaceEntity(from, to)
-	local action_taken = cleanupReplaceEntity(from, to)
-
-	if action_taken and IsValid(to) then
+	if IsValid(to) then
 		to:CPPISetOwner(from:CPPIGetOwner())
 	end
 
-	return action_taken
+	return cleanupReplaceEntity(from, to)
 end
 
 local setCreator = ENTITY.SetCreator
