@@ -105,6 +105,8 @@ end
 function cleanup.ReplaceEntity(from, to)
 	if IsValid(to) then
 		to:CPPISetOwner(from:CPPIGetOwner())
+	else
+		from:CPPISetOwner(nil)
 	end
 
 	return cleanupReplaceEntity(from, to)
