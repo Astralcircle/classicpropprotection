@@ -66,8 +66,8 @@ if SERVER then
 
 		local tab = {}
 
-		for k, v in pairs(friends) do
-			table.insert(tab, k)
+		for _, ply in pairs(friends) do
+			table.insert(tab, ply)
 		end
 
 		return tab
@@ -77,7 +77,7 @@ if SERVER then
 		CPP.SetOwner(self, ply)
 	end
 
-	function ENTITY:CPPICanTool(ply, toolmode)
+	function ENTITY:CPPICanTool(ply)
 		return CPP.CanTouch(ply, self)
 	end
 
@@ -85,7 +85,11 @@ if SERVER then
 		return CPP.CanTouch(ply, self)
 	end
 
-	function ENTITY:CPPICanProperty(ply, property)
+	function ENTITY:CPPICanProperty(ply)
+		return CPP.CanTouch(ply, self)
+	end
+
+	function ENTITY:CPPICanEditVariable(ply)
 		return CPP.CanTouch(ply, self)
 	end
 
