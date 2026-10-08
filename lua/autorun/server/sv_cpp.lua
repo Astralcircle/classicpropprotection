@@ -154,22 +154,7 @@ net.Receive("cpp_misc", function(len, ply)
 	net.Broadcast()
 end)
 
-hook.Add("PlayerDisconnected", "CPP_CleanupFriends", function(ply)
-	for _, friend in player.Iterator() do
-		if friend.CPPFriends then
-			friend.CPPFriends[ply] = nil
-		end
-	end
-
-	net.Start("cpp_misc")
-	net.WriteUInt(3, 2)
-	net.WriteBool(true)
-	net.WriteString(ply:SteamID())
-	net.Broadcast()
-end)
-
 -- Cleanup
-
 concommand.Add("CPP_Cleanup", function(ply, cmd, args, argstr)
 	if not args[1] then return end
 
@@ -221,7 +206,7 @@ concommand.Add("CPP_Cleanup", function(ply, cmd, args, argstr)
 	end
 end)
 
--- Auto-cleanup + reset owners
+-- Clear anything after player + cleanup timer
 hook.Add("PlayerDisconnected", "CPP_AutoCleanup", function(ply)
 	local created = false
 
@@ -237,10 +222,25 @@ hook.Add("PlayerDisconnected", "CPP_AutoCleanup", function(ply)
 		net.Broadcast()
 	end
 
+	local plyindex = ply:EntIndex()
+	CPP.TouchEverything[plyindex] = nil
+
 	net.Start("cpp_misc")
 	net.WriteUInt(1, 2)
-	net.WriteUInt(ply:EntIndex(), MAX_PLAYER_BITS)
+	net.WriteUInt(plyindex, MAX_PLAYER_BITS)
 	net.WriteBool(false)
+	net.Broadcast()
+
+	for _, friend in player.Iterator() do
+		if friend.CPPFriends then
+			friend.CPPFriends[ply] = nil
+		end
+	end
+
+	net.Start("cpp_misc")
+	net.WriteUInt(3, 2)
+	net.WriteBool(true)
+	net.WriteString(ply:SteamID())
 	net.Broadcast()
 
 	local steamid = ply:SteamID()
