@@ -6,11 +6,11 @@ function CPP.CanTouch(ply, ent)
 
 	if owner ~= ply then
 		if not IsValid(owner) then
-			return (ply:GetNW2Bool("CPP_TouchEverything") or ply == ent) and ply:GetInfoNum("cpp_ignoreworldprops", 1) == 0
+			return (ply == ent or CPP.TouchEverything[ply:EntIndex()]) and ply:GetInfoNum("cpp_ignoreworldprops", 1) == 0
 		end
 
 		if ply:GetInfoNum("cpp_ignoreothersprops", 0) == 0 then
-			if ply:GetNW2Bool("CPP_TouchEverything") or ply == ent then
+			if ply == ent or CPP.TouchEverything[ply:EntIndex()] then
 				return true
 			end
 
@@ -125,5 +125,9 @@ hook.Add("Initialize", "CPP_RegisterCAMI", function()
 			Name = "CPP_TouchEverything",
 			MinAccess = "admin"
 		})
+
+		if SERVER then
+			hook.Add("CAMI.PlayerUsergroupChanged", "CPP_SetupRights", CPP.CalculateCanTouch)
+		end
 	end
 end)

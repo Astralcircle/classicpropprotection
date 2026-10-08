@@ -1,6 +1,7 @@
 CPP = CPP or {}
 CPP.Friends = {}
 CPP.EntOwners = {}
+CPP.TouchEverything = {}
 
 function CPP.GetOwner(ent)
 	local index = CPP.EntOwners[ent:EntIndex()]
@@ -19,23 +20,34 @@ net.Receive("cpp_sendowners", function(length)
 	end
 end)
 
-net.Receive("cpp_notify", function()
-	notification.AddLegacy(net.ReadString() .. " cleaned up " .. net.ReadString() .. " props", NOTIFY_CLEANUP, 2)
-	surface.PlaySound("buttons/button15.wav")
-end)
+net.Receive("cpp_misc", function()
+	local action = net.ReadUInt(2)
+	print(action)
 
-net.Receive("cpp_friends", function()
-	if net.ReadBool() then
-		local steamid = net.ReadString()
-		CPP.Friends[steamid] = nil
+	if action == 1 then
+		local plyindex = net.ReadUInt(MAX_PLAYER_BITS)
 
-		for _, friends in pairs(CPP.Friends) do
-			friends[steamid] = nil
+		if net.ReadBool() then
+			CPP.TouchEverything[plyindex] = true
+		else
+			CPP.TouchEverything[plyindex] = nil
 		end
-	else
-		local steamid = net.ReadString()
-		CPP.Friends[steamid] = CPP.Friends[steamid] or {}
-		CPP.Friends[steamid][net.ReadString()] = net.ReadBool() or nil
+	elseif action == 2 then
+		notification.AddLegacy(net.ReadString() .. " cleaned up " .. net.ReadString() .. " props", NOTIFY_CLEANUP, 2)
+		surface.PlaySound("buttons/button15.wav")
+	elseif action == 3 then
+		if net.ReadBool() then
+			local steamid = net.ReadString()
+			CPP.Friends[steamid] = nil
+
+			for _, friends in pairs(CPP.Friends) do
+				friends[steamid] = nil
+			end
+		else
+			local steamid = net.ReadString()
+			CPP.Friends[steamid] = CPP.Friends[steamid] or {}
+			CPP.Friends[steamid][net.ReadString()] = net.ReadBool() or nil
+		end
 	end
 end)
 
@@ -120,7 +132,7 @@ function CPP.ClientMenu(panel)
 				local friend = not self.Friend
 				self.Friend = friend
 
-				net.Start("cpp_friends")
+				net.Start("cpp_misc")
 				net.WriteString(steamid)
 				net.WriteBool(friend)
 				net.SendToServer()

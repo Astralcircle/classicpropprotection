@@ -1,10 +1,11 @@
 CPP = CPP or {}
+CPP.TouchEverything = {}
 
 local ENTITY = FindMetaTable("Entity")
-local getTable = ENTITY.GetTable
+local GetTable = ENTITY.GetTable
 
 function CPP.GetOwner(ent)
-	return getTable(ent).CPPOwner
+	return GetTable(ent).CPPOwner
 end
 
 -- Set owner function
@@ -132,10 +133,11 @@ hook.Add("PostGamemodeLoaded", "CPP_OverrideFunctions", function()
 	end
 end)
 
--- Friends
-util.AddNetworkString("cpp_friends")
+-- Net message for misc stuff
+util.AddNetworkString("cpp_misc")
 
-net.Receive("cpp_friends", function(len, ply)
+-- Friends
+net.Receive("cpp_misc", function(len, ply)
 	local target_ply = player.GetBySteamID(net.ReadString())
 	if not target_ply or target_ply == ply then return end
 
@@ -143,7 +145,8 @@ net.Receive("cpp_friends", function(len, ply)
 	ply.CPPFriends = ply.CPPFriends or {}
 	ply.CPPFriends[target_ply] = value or nil
 
-	net.Start("cpp_friends")
+	net.Start("cpp_misc")
+	net.WriteUInt(3, 2)
 	net.WriteBool(false)
 	net.WriteString(ply:SteamID())
 	net.WriteString(target_ply:SteamID())
@@ -158,49 +161,63 @@ hook.Add("PlayerDisconnected", "CPP_CleanupFriends", function(ply)
 		end
 	end
 
-	net.Start("cpp_friends")
+	net.Start("cpp_misc")
+	net.WriteUInt(3, 2)
 	net.WriteBool(true)
 	net.WriteString(ply:SteamID())
 	net.Broadcast()
 end)
 
-util.AddNetworkString("cpp_notify")
-
 -- Cleanup
+
 concommand.Add("CPP_Cleanup", function(ply, cmd, args, argstr)
-	if not ply.CPPCanCleanup or not args[1] then return end
+	if not args[1] then return end
 
-	if args[1] == "disconnected" then
-		for _, ent in ents.Iterator() do
-			local owner = CPP.GetOwner(ent)
+	local function CPP_Cleanup()
+		if args[1] == "disconnected" then
+			for _, ent in ents.Iterator() do
+				local owner = CPP.GetOwner(ent)
 
-			if owner ~= nil and not owner:IsValid() then
-				ent:Remove()
+				if owner ~= nil and not owner:IsValid() then
+					ent:Remove()
+				end
 			end
+
+			net.Start("cpp_misc")
+			net.WriteUInt(2, 2)
+			net.WriteString(ply:Nick())
+			net.WriteString("disconnected")
+			net.Broadcast()
+		else
+			local target_owner = player.GetBySteamID(args[1])
+			if not target_owner then return end
+
+			for _, ent in ents.Iterator() do
+				if ent:IsWeapon() and ent:GetOwner():IsValid() then
+					continue
+				end
+
+				if CPP.GetOwner(ent) == target_owner then
+					ent:Remove()
+				end
+			end
+
+			net.Start("cpp_misc")
+			net.WriteUInt(2, 2)
+			net.WriteString(ply:Nick())
+			net.WriteString(target_owner:Nick())
+			net.Broadcast()
 		end
+	end
 
-		net.Start("cpp_notify")
-		net.WriteString(ply:Nick())
-		net.WriteString("disconnected")
-		net.Broadcast()
-	else
-		local target_owner = player.GetBySteamID(args[1])
-		if not target_owner then return end
-
-		for _, ent in ents.Iterator() do
-			if ent:IsWeapon() and ent:GetOwner():IsValid() then
-				continue
+	if CAMI then
+		CAMI.PlayerHasAccess(ply, "CPP_Cleanup", function(bool)
+			if bool and ply:IsValid() then
+				CPP_Cleanup()
 			end
-
-			if CPP.GetOwner(ent) == target_owner then
-				ent:Remove()
-			end
-		end
-
-		net.Start("cpp_notify")
-		net.WriteString(ply:Nick())
-		net.WriteString(target_owner:Nick())
-		net.Broadcast()
+		end)
+	elseif ply:IsAdmin() then
+		CPP_Cleanup()
 	end
 end)
 
@@ -220,6 +237,12 @@ hook.Add("PlayerDisconnected", "CPP_AutoCleanup", function(ply)
 		net.Broadcast()
 	end
 
+	net.Start("cpp_misc")
+	net.WriteUInt(1, 2)
+	net.WriteUInt(ply:EntIndex(), MAX_PLAYER_BITS)
+	net.WriteBool(false)
+	net.Broadcast()
+
 	local steamid = ply:SteamID()
 
 	timer.Create("CPP_AutoCleanup" .. steamid, 300, 1, function()
@@ -232,25 +255,31 @@ hook.Add("PlayerDisconnected", "CPP_AutoCleanup", function(ply)
 end)
 
 -- CAMI rights
-hook.Add("PlayerInitialSpawn", "CPP_SetupRights", function(ply)
+function CPP.CalculateCanTouch(ply)
+	local function CanTouch(can_touch)
+		can_touch = can_touch and true or nil
+		CPP.TouchEverything[ply:EntIndex()] = can_touch
+
+		net.Start("cpp_misc")
+		net.WriteUInt(1, 2)
+		net.WriteUInt(ply:EntIndex(), MAX_PLAYER_BITS)
+		net.WriteBool(can_touch)
+		net.Broadcast()
+	end
+
 	timer.Simple(0, function()
 		if not ply:IsValid() then return end
 
 		if CAMI then
-			CAMI.PlayerHasAccess(ply, "CPP_Cleanup", function(bool)
-				if bool then
-					ply.CPPCanCleanup = true
-				end
-			end)
-
 			CAMI.PlayerHasAccess(ply, "CPP_TouchEverything", function(bool)
-				if bool then
-					ply:SetNW2Bool("CPP_TouchEverything", true)
+				if ply:IsValid() then
+					CanTouch(bool)
 				end
 			end)
-		elseif ply:IsAdmin() then
-			ply.CPPCanCleanup = true
-			ply:SetNW2Bool("CPP_TouchEverything", true)
+		else
+			CanTouch(ply:IsAdmin())
 		end
 	end)
-end)
+end
+
+hook.Add("PlayerInitialSpawn", "CPP_SetupRights", CPP.CalculateCanTouch)
