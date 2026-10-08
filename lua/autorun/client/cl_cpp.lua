@@ -22,7 +22,6 @@ end)
 
 net.Receive("cpp_misc", function()
 	local action = net.ReadUInt(2)
-	print(action)
 
 	if action == 1 then
 		local plyindex = net.ReadUInt(MAX_PLAYER_BITS)
